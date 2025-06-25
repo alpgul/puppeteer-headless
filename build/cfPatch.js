@@ -1,3 +1,4 @@
+"use strict";
 (() => {
   // src/core/constant/global.ts
   var NOT_FOUND = -1;
@@ -16,13 +17,14 @@
   ];
 
   // src/container/stackFilterStorage.ts
-  class StackFilterStorage {
+  var StackFilterStorage = class _StackFilterStorage {
     static instance;
     filters = [];
-    constructor() {}
+    constructor() {
+    }
     static getInstance() {
-      StackFilterStorage.instance ??= new StackFilterStorage;
-      return StackFilterStorage.instance;
+      _StackFilterStorage.instance ??= new _StackFilterStorage();
+      return _StackFilterStorage.instance;
     }
     add(filter) {
       this.filters.push(filter);
@@ -38,7 +40,7 @@
     }
     apply(error, stackObject) {
       for (const filter of this.filters) {
-        if (typeof filter === "function" && error.stack !== undefined) {
+        if (typeof filter === "function" && error.stack !== void 0) {
           [error, stackObject] = filter(error, stackObject);
         }
       }
@@ -47,26 +49,28 @@
     clear() {
       this.filters = [];
     }
-  }
+  };
   var stackFilterStorage = StackFilterStorage.getInstance();
 
   // src/filters/consoleFilter.ts
   function consoleFilter(error, stackObject) {
-    if (error.stack !== undefined) {
-      const arrayStack = error.stack.split(`
-`);
+    if (error.stack !== void 0) {
+      const arrayStack = error.stack.split("\n");
       const stackIndex = arrayStack.findIndex((item) => item.includes("consoleCommonFunction"));
       if (stackIndex > NOT_FOUND) {
         arrayStack.splice(stackIndex, 1 /* SINGLE_ITEM_REMOVAL */);
         if (stackIndex < arrayStack.length - 1) {
           const line = arrayStack.at(stackIndex);
           if (typeof line === "string") {
-            arrayStack.splice(stackIndex, 1, line.replaceAll(/eval at applyPatch[^)]+\), /g, "").replaceAll(/(<anonymous>):\d+:\d+/g, "$1"));
+            arrayStack.splice(
+              stackIndex,
+              1,
+              line.replaceAll(/eval at applyPatch[^)]+\), /g, "").replaceAll(/(<anonymous>):\d+:\d+/g, "$1")
+            );
           }
         }
         stackObject.splice(stackIndex - 1, 1 /* SINGLE_ITEM_REMOVAL */);
-        error.stack = arrayStack.join(`
-`);
+        error.stack = arrayStack.join("\n");
       }
     }
     return [error, stackObject];
@@ -74,15 +78,13 @@
 
   // src/filters/listenerFilter.ts
   function listenerFilter(error, stackObject) {
-    if (error.stack !== undefined) {
-      const arrayStack = error.stack.split(`
-`);
+    if (error.stack !== void 0) {
+      const arrayStack = error.stack.split("\n");
       const stackIndex = arrayStack.findIndex((item) => item.includes("wrappedListener"));
       if (stackIndex > NOT_FOUND) {
         arrayStack.splice(stackIndex, 1 /* SINGLE_ITEM_REMOVAL */);
         stackObject.splice(stackIndex - 1, 1 /* SINGLE_ITEM_REMOVAL */);
-        error.stack = arrayStack.join(`
-`);
+        error.stack = arrayStack.join("\n");
       }
     }
     return [error, stackObject];
@@ -90,15 +92,13 @@
 
   // src/filters/mouseSimulationFilter.ts
   function mouseSimulationFilter(error, stackObject) {
-    if (error.stack !== undefined) {
-      const arrayStack = error.stack.split(`
-`);
+    if (error.stack !== void 0) {
+      const arrayStack = error.stack.split("\n");
       const stackIndex = arrayStack.findIndex((item) => item.includes("moveStep"));
       if (stackIndex > NOT_FOUND) {
         arrayStack.splice(stackIndex, 1 /* SINGLE_ITEM_REMOVAL */);
         stackObject.splice(stackIndex - 1, 1 /* SINGLE_ITEM_REMOVAL */);
-        error.stack = arrayStack.join(`
-`);
+        error.stack = arrayStack.join("\n");
       }
     }
     return [error, stackObject];
@@ -106,15 +106,13 @@
 
   // src/filters/onMessageFilter.ts
   function onMessageFilter(error, stackObject) {
-    if (error.stack !== undefined) {
-      const arrayStack = error.stack.split(`
-`);
+    if (error.stack !== void 0) {
+      const arrayStack = error.stack.split("\n");
       const stackIndex = arrayStack.findIndex((item) => item.includes("dispatchGlobalOnMessage"));
       if (stackIndex > NOT_FOUND) {
         arrayStack.splice(stackIndex, 3 /* THREE_ITEM_REMOVAL */);
         stackObject.splice(stackIndex - 1, 3 /* THREE_ITEM_REMOVAL */);
-        error.stack = arrayStack.join(`
-`);
+        error.stack = arrayStack.join("\n");
       }
     }
     return [error, stackObject];
@@ -166,7 +164,7 @@
   var browser_default = Browser;
 
   // src/container/globallyStorage.ts
-  class GloballyStorage {
+  var GloballyStorage = class _GloballyStorage {
     static instance;
     metaData;
     screenRect;
@@ -174,11 +172,11 @@
     topWindow;
     topWindowToString;
     constructor() {
-      this.shadowRootSet = new Set;
+      this.shadowRootSet = /* @__PURE__ */ new Set();
     }
     static getInstance() {
-      GloballyStorage.instance ??= new GloballyStorage;
-      return GloballyStorage.instance;
+      _GloballyStorage.instance ??= new _GloballyStorage();
+      return _GloballyStorage.instance;
     }
     addShadowRoot(shadowRoot) {
       this.shadowRootSet.add(shadowRoot);
@@ -187,8 +185,8 @@
       return this.metaData;
     }
     getScreenRect() {
-      if (this.screenRect === undefined) {
-        return new DOMRect;
+      if (this.screenRect === void 0) {
+        return new DOMRect();
       }
       return this.screenRect;
     }
@@ -209,21 +207,21 @@
     setScreenRect(rect) {
       this.screenRect = rect;
     }
-  }
+  };
   var globallyStorage = GloballyStorage.getInstance();
 
   // src/container/listenerStorage.ts
-  class ListenerStorage {
+  var ListenerStorage = class _ListenerStorage {
     static instance;
     globalOnMessageArr;
     listenerMap;
     constructor() {
-      this.listenerMap = new WeakMap;
+      this.listenerMap = /* @__PURE__ */ new WeakMap();
       this.globalOnMessageArr = [];
     }
     static getInstance() {
-      ListenerStorage.instance ??= new ListenerStorage;
-      return ListenerStorage.instance;
+      _ListenerStorage.instance ??= new _ListenerStorage();
+      return _ListenerStorage.instance;
     }
     deleteListenerMap(callback) {
       this.listenerMap.delete(callback);
@@ -248,19 +246,19 @@
     setListenerMap(callback, wrappedListener) {
       this.listenerMap.set(callback, { counter: 1, wrappedListener });
     }
-  }
+  };
   var listenerStorage = ListenerStorage.getInstance();
 
   // src/container/originalFunctionStorage.ts
-  class OriginalFunctionStorage {
+  var OriginalFunctionStorage = class _OriginalFunctionStorage {
     static instance;
     storage;
     constructor() {
-      this.storage = new WeakMap;
+      this.storage = /* @__PURE__ */ new WeakMap();
     }
     static getInstance() {
-      OriginalFunctionStorage.instance ??= new OriginalFunctionStorage;
-      return OriginalFunctionStorage.instance;
+      _OriginalFunctionStorage.instance ??= new _OriginalFunctionStorage();
+      return _OriginalFunctionStorage.instance;
     }
     store(wrappedFunction, originalFunction) {
       this.storage.set(wrappedFunction, originalFunction);
@@ -271,11 +269,11 @@
     has(wrappedFunction) {
       return this.storage.has(wrappedFunction);
     }
-  }
+  };
   var originalFunctionStorage = OriginalFunctionStorage.getInstance();
 
   // src/simulation/initMouseSimulation.ts
-  var WAIT_TIME = 5000;
+  var WAIT_TIME = 5e3;
   var BUTTON_NONE = -1;
   var BUTTON_PRIMARY = 0;
   var BUTTON_STATE_NONE = 0;
@@ -357,8 +355,7 @@
       keyframesStyle.id = "dynamicKeyframes";
       document.head.append(keyframesStyle);
     }
-    let keyframesCSS = `@keyframes dynamicPathMove {
-`;
+    let keyframesCSS = "@keyframes dynamicPathMove {\n";
     for (const [index, path] of pathArray.entries()) {
       const percentage = index / (pathArray.length - 1) * 100;
       keyframesCSS += `  ${percentage.toFixed(2)}% {
@@ -369,7 +366,7 @@ top: ${path.y}px;
     }
     keyframesCSS += "}";
     keyframesStyle.textContent = keyframesCSS;
-    targetElement.style.animation = `dynamicPathMove ${(pathArray.length / 60 * 1000).toFixed(0)}ms linear infinite`;
+    targetElement.style.animation = `dynamicPathMove ${(pathArray.length / 60 * 1e3).toFixed(0)}ms linear infinite`;
   }
   function createMousePaths(start, end, targetWidth, area) {
     const { startX, startY } = start;
@@ -387,7 +384,7 @@ top: ${path.y}px;
     const b = 150;
     const difficultyIndex = Math.log2(distance / targetWidth + 1);
     const movementTime = (a + b * difficultyIndex) * speedMultiplier;
-    const totalFrames = Math.ceil(movementTime / 1000 * 60);
+    const totalFrames = Math.ceil(movementTime / 1e3 * 60);
     const controlOffset = curvature;
     const dx = targetPoint.x - startPoint.x;
     const dy = targetPoint.y - startPoint.y;
@@ -404,13 +401,14 @@ top: ${path.y}px;
     });
     const p3 = targetPoint;
     const path = [];
-    for (let index = 0;index <= totalFrames; index++) {
+    for (let index = 0; index <= totalFrames; index++) {
       const rawT = index / totalFrames;
       const naturalT = applyNaturalMotion(rawT);
       const point = calculateBezierPoint({ naturalT, p0, p1, p2, p3 });
       const clampedPoint = clampPoint(point);
       path.push({
-        time: 1 / 60 * 1000 * (100 + getRandomNumber() * 2) / 100,
+        time: 1 / 60 * 1e3 * (100 + getRandomNumber() * 2) / 100,
+        // fps drop using crypto
         x: clampedPoint.x,
         y: clampedPoint.y
       });
@@ -437,7 +435,7 @@ top: ${path.y}px;
   }
   function mouseMovePaths(paths, targetElement) {
     let pathIndex = 1;
-    let previousTarget = undefined;
+    let previousTarget = void 0;
     let redDot = document.querySelector("#redDot");
     if (!redDot) {
       redDot = document.createElement("div");
@@ -448,16 +446,19 @@ top: ${path.y}px;
     createDynamicKeyframes(redDot, paths);
     const moveStep = () => {
       const path = paths.at(pathIndex);
-      if (!path)
-        return;
+      if (!path) return;
       const target = document.elementFromPoint(path.x, path.y);
-      if (!target)
-        return;
-      const previousPath = pathIndex > 0 ? paths[pathIndex - 1] : undefined;
+      if (!target) return;
+      const previousPath = pathIndex > 0 ? paths[pathIndex - 1] : void 0;
       const movementX = previousPath ? path.x - previousPath.x : MOVEMENT_NONE;
       const movementY = previousPath ? path.y - previousPath.y : MOVEMENT_NONE;
       if (target !== previousTarget) {
-        const pointerover = createPointerEvent("pointerover", path, { movementX: MOVEMENT_NONE, movementY: MOVEMENT_NONE }, { button: BUTTON_NONE });
+        const pointerover = createPointerEvent(
+          "pointerover",
+          path,
+          { movementX: MOVEMENT_NONE, movementY: MOVEMENT_NONE },
+          { button: BUTTON_NONE }
+        );
         target.dispatchEvent(pointerover);
         previousTarget = target;
       }
@@ -470,7 +471,7 @@ top: ${path.y}px;
       if (nextPath) {
         setTimeout(moveStep, nextPath.time);
       } else {
-        const click = createPointerEvent("click", path, undefined, { button: BUTTON_PRIMARY, detail: DETAIL_CLICK });
+        const click = createPointerEvent("click", path, void 0, { button: BUTTON_PRIMARY, detail: DETAIL_CLICK });
         if (targetElement instanceof HTMLElement) {
           targetElement.focus();
         }
@@ -520,7 +521,10 @@ top: ${path.y}px;
     if (event.data?.command === "getScreen" && event.source instanceof Window) {
       const targetIframe = browser_default.findIframeByWindow(event.source);
       if (targetIframe) {
-        event.source.postMessage({ command: "receiveScreen", rect: targetIframe.getBoundingClientRect(), type: "screen" }, { targetOrigin: event.origin });
+        event.source.postMessage(
+          { command: "receiveScreen", rect: targetIframe.getBoundingClientRect(), type: "screen" },
+          { targetOrigin: event.origin }
+        );
       }
     } else if (event.data?.command === "receiveScreen" && event.data.rect instanceof DOMRect) {
       globallyStorage.setScreenRect(event.data.rect);
@@ -555,28 +559,28 @@ top: ${path.y}px;
   var window_default = WindowHandler;
 
   // src/patches/console/console.ts
-  class FakeConsole {
+  var FakeConsole = class {
     static Type = 2 /* VALUE */;
     static consoleCommonFunction = (...arguments_) => {
       for (const argument of arguments_) {
-        if (argument !== null && argument !== undefined && (typeof argument === "object" || typeof argument === "function") && Reflect.has(argument, "toString")) {
+        if (argument !== null && argument !== void 0 && (typeof argument === "object" || typeof argument === "function") && Reflect.has(argument, "toString")) {
           argument.toString();
         }
       }
     };
-  }
+  };
   var console_default = FakeConsole;
 
   // src/services/registerFunction.ts
-  class RegisterService {
+  var RegisterService = class _RegisterService {
     static instance;
     originalDispatch = globalThis.dispatchEvent;
     constructor() {
       this.originalDispatch = globalThis.dispatchEvent;
     }
     static getInstance() {
-      RegisterService.instance ??= new RegisterService;
-      return RegisterService.instance;
+      _RegisterService.instance ??= new _RegisterService();
+      return _RegisterService.instance;
     }
     registerFunction({
       originalFunction,
@@ -591,7 +595,7 @@ top: ${path.y}px;
         ]);
       }
     }
-  }
+  };
   var registerService = RegisterService.getInstance();
 
   // src/strategies/modifyFunction.ts
@@ -642,7 +646,10 @@ top: ${path.y}px;
     applyPatch(console) {
       for (const name of consoleMethods) {
         const wrappedFunctionString = `{${name}(...args){return Reflect.apply(modifyFunction,this,args);}}`;
-        const wrappedDescriptor = new Function("modifyFunction", `return Object.getOwnPropertyDescriptor(${wrappedFunctionString}, '${name}')`)(console_default.consoleCommonFunction);
+        const wrappedDescriptor = new Function(
+          "modifyFunction",
+          `return Object.getOwnPropertyDescriptor(${wrappedFunctionString}, '${name}')`
+        )(console_default.consoleCommonFunction);
         if (wrappedDescriptor) {
           modifyFunction(console, name, wrappedDescriptor, 2 /* VALUE */);
         }
@@ -652,11 +659,11 @@ top: ${path.y}px;
   var consolePatch_default = ConsolePatch;
 
   // src/patches/console/context.ts
-  class FakeContext {
+  var FakeContext = class _FakeContext {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static context(...arguments_) {
-      const consoleContext = Reflect.apply(FakeContext.OriginalFunction, this, arguments_);
+      const consoleContext = Reflect.apply(_FakeContext.OriginalFunction, this, arguments_);
       if (!(consoleContext instanceof Object)) {
         return;
       }
@@ -664,15 +671,15 @@ top: ${path.y}px;
       consolePatch_default.applyPatch(typedContext);
       return typedContext;
     }
-  }
+  };
   var context_default = FakeContext;
 
   // src/patches/eventTarget/addEventListener.ts
-  class AddEventListener {
+  var AddEventListener = class _AddEventListener {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static addEventListener(type, callback, ...options) {
-      let wrappedListener = undefined;
+      let wrappedListener = void 0;
       if (typeof callback === "function") {
         if (this === globalThis && type === "message") {
           listenerStorage.onMessageAdd(callback);
@@ -707,24 +714,24 @@ top: ${path.y}px;
           listenerStorage.setListenerMap(callback, wrappedListener);
         }
       }
-      Reflect.apply(AddEventListener.OriginalFunction, this, [type, wrappedListener ?? callback, ...options]);
+      Reflect.apply(_AddEventListener.OriginalFunction, this, [type, wrappedListener ?? callback, ...options]);
     }
-  }
+  };
   var addEventListener_default = AddEventListener;
 
   // src/patches/eventTarget/removeEventListener.ts
-  class RemoveEventListener {
+  var RemoveEventListener = class _RemoveEventListener {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static patch() {
       Object.defineProperty(EventTarget.prototype, "removeEventListener", {
         configurable: true,
-        value: RemoveEventListener.removeEventListener,
+        value: _RemoveEventListener.removeEventListener,
         writable: true
       });
       return {
-        originalFunction: RemoveEventListener.OriginalFunction,
-        wrappedFunction: RemoveEventListener.removeEventListener
+        originalFunction: _RemoveEventListener.OriginalFunction,
+        wrappedFunction: _RemoveEventListener.removeEventListener
       };
     }
     static removeEventListener(type, callback, ...options) {
@@ -744,31 +751,32 @@ top: ${path.y}px;
           }
         }
       }
-      Reflect.apply(RemoveEventListener.OriginalFunction, this, [type, callback, ...options]);
+      Reflect.apply(_RemoveEventListener.OriginalFunction, this, [type, callback, ...options]);
     }
-  }
+  };
   var removeEventListener_default = RemoveEventListener;
 
   // src/patches/HTMLElement/attachShadow.ts
-  class FakeAttachShadow {
+  var FakeAttachShadow = class _FakeAttachShadow {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static attachShadow(options) {
-      const shadow = Reflect.apply(FakeAttachShadow.OriginalFunction, this, [options]);
+      const shadow = Reflect.apply(_FakeAttachShadow.OriginalFunction, this, [options]);
       initMouseSimulation_default(shadow);
       globallyStorage.addShadowRoot(shadow);
       return shadow;
     }
-  }
+  };
   var attachShadow_default = FakeAttachShadow;
 
   // src/patches/HTMLElement/onClick.ts
-  class FakeOnClickEL {
+  var FakeOnClickEL = class _FakeOnClickEL {
     static OriginalGetFunction;
     static originalSetFunction;
     static Type = 1 /* SET */;
+    // @ts-expect-error - This is intentional for patching HTMLElement onclick
     static get onclick() {
-      const listener = Reflect.apply(FakeOnClickEL.OriginalGetFunction, this, []);
+      const listener = Reflect.apply(_FakeOnClickEL.OriginalGetFunction, this, []);
       if (listener?.originalListener) {
         return listener.originalListener;
       }
@@ -796,42 +804,45 @@ top: ${path.y}px;
           Reflect.apply(listener, this, arguments_);
         };
         wrappedListener.originalListener = listener;
-        Reflect.apply(FakeOnClickEL.originalSetFunction, this, [wrappedListener]);
+        Reflect.apply(_FakeOnClickEL.originalSetFunction, this, [wrappedListener]);
       } else {
-        Reflect.apply(FakeOnClickEL.originalSetFunction, this, [listener]);
+        Reflect.apply(_FakeOnClickEL.originalSetFunction, this, [listener]);
       }
     }
-  }
+  };
   var onClick_default = FakeOnClickEL;
 
   // src/patches/screen/availHeight.ts
-  class FakeAvailHeight {
+  var FakeAvailHeight = class _FakeAvailHeight {
     static OriginalGetFunction;
     static Type = 0 /* GET */;
+    // @ts-expect-error - This is intentional for patching Screen availHeight
     static get availHeight() {
-      const returnValue = Reflect.apply(FakeAvailHeight.OriginalGetFunction, this, []);
+      const returnValue = Reflect.apply(_FakeAvailHeight.OriginalGetFunction, this, []);
       return returnValue ? returnValue - TASKBAR_HEIGHT : returnValue;
     }
-  }
+  };
   var availHeight_default = FakeAvailHeight;
 
   // src/patches/screenOrientation/type.ts
-  class FakeType {
+  var FakeType = class {
     static OriginalGetFunction;
     static Type = 0 /* GET */;
+    // eslint-disable-next-line @typescript-eslint/class-literal-property-style -- This is intentional for patching ScreenOrientation type
     static get type() {
       return "landscape-primary";
     }
-  }
+  };
   var type_default = FakeType;
 
   // src/patches/window/onClick.ts
-  class FakeOnClick {
+  var FakeOnClick = class _FakeOnClick {
     static OriginalGetFunction;
     static OriginalSetFunction;
     static Type = 1 /* SET */;
+    // @ts-expect-error - This is intentional for patching Window onclick
     static get onclick() {
-      const listener = Reflect.apply(FakeOnClick.OriginalGetFunction, this, []);
+      const listener = Reflect.apply(_FakeOnClick.OriginalGetFunction, this, []);
       if (listener?.originalListener) {
         return listener.originalListener;
       }
@@ -859,12 +870,12 @@ top: ${path.y}px;
           Reflect.apply(listener, this, arguments_);
         };
         wrappedListener.originalListener = listener;
-        Reflect.apply(FakeOnClick.OriginalSetFunction, this, [wrappedListener]);
+        Reflect.apply(_FakeOnClick.OriginalSetFunction, this, [wrappedListener]);
       } else {
-        Reflect.apply(FakeOnClick.OriginalSetFunction, this, [listener]);
+        Reflect.apply(_FakeOnClick.OriginalSetFunction, this, [listener]);
       }
     }
-  }
+  };
   var onClick_default2 = FakeOnClick;
 
   // src/strategies/patch/commonPatch.ts
@@ -896,22 +907,20 @@ top: ${path.y}px;
 
   // src/filters/commonFunctionFilter.ts
   function CommonFunctionFilter(error, stackObject) {
-    if (error.stack !== undefined) {
-      const arrayStack = error.stack.split(`
-`);
+    if (error.stack !== void 0) {
+      const arrayStack = error.stack.split("\n");
       const stackIndex = arrayStack.findIndex((item) => item.includes(FILTER_PATCH_NAME));
       if (stackIndex > NOT_FOUND) {
         arrayStack.splice(stackIndex, 2 /* TWO_ITEM_REMOVAL */);
         stackObject.splice(stackIndex - 1, 2 /* TWO_ITEM_REMOVAL */);
-        error.stack = arrayStack.join(`
-`);
+        error.stack = arrayStack.join("\n");
       }
     }
     return [error, stackObject];
   }
 
   // src/patches/function/toString.ts
-  class FakeToString {
+  var FakeToString = class _FakeToString {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static toString(...arguments_) {
@@ -919,37 +928,35 @@ top: ${path.y}px;
         [FILTER_PATCH_NAME]: () => {
           if (globallyStorage.getTopWindow() === globalThis.self) {
             if (originalFunctionStorage.has(this)) {
-              return Reflect.apply(FakeToString.OriginalFunction, originalFunctionStorage.get(this), arguments_);
+              return Reflect.apply(_FakeToString.OriginalFunction, originalFunctionStorage.get(this), arguments_);
             }
-            return Reflect.apply(FakeToString.OriginalFunction, this, arguments_);
+            return Reflect.apply(_FakeToString.OriginalFunction, this, arguments_);
           }
           return Reflect.apply(globallyStorage.getToWindowToString(), this, arguments_);
         }
       };
       return patch[FILTER_PATCH_NAME]();
     }
-  }
+  };
   var toString_default = FakeToString;
 
   // src/patches/error/error.ts
-  class FakeError {
+  var FakeError = class _FakeError {
     static OriginalFunction;
     static Type = 2 /* VALUE */;
     static Error = function(message, options) {
-      const error = new FakeError.OriginalFunction(message, options);
+      const error = new _FakeError.OriginalFunction(message, options);
       Object.setPrototypeOf(error, Error.prototype);
       if (typeof error.stack === "string") {
-        const lines = error.stack.split(`
-`);
+        const lines = error.stack.split("\n");
         error.stack = [
           ...lines.slice(0 /* FIRST_ITEM */, 1 /* SINGLE_ITEM_REMOVAL */),
           ...lines.slice(2 /* TWO_ITEM_REMOVAL */)
-        ].join(`
-`);
+        ].join("\n");
       }
       return error;
     };
-  }
+  };
   var error_default = FakeError;
 
   // src/strategies/patch/errorPatch.ts
@@ -967,15 +974,13 @@ top: ${path.y}px;
         for (const property of Object.getOwnPropertyNames(originalError.prototype)) {
           if (property !== "constructor") {
             const descriptor = Object.getOwnPropertyDescriptor(originalError.prototype, property);
-            if (descriptor)
-              Object.defineProperty(wrappedDescriptor.value.prototype, property, descriptor);
+            if (descriptor) Object.defineProperty(wrappedDescriptor.value.prototype, property, descriptor);
           }
         }
         for (const property of Object.getOwnPropertyNames(originalError)) {
           if (property !== "prototype") {
             const descriptor = Object.getOwnPropertyDescriptor(originalError, property);
-            if (descriptor)
-              Object.defineProperty(wrappedDescriptor.value, property, descriptor);
+            if (descriptor) Object.defineProperty(wrappedDescriptor.value, property, descriptor);
           }
         }
         originalError.prepareStackTrace = function prepareStackTrace(error, stack) {
@@ -989,10 +994,8 @@ top: ${path.y}px;
           }
           const limit = Math.max(Error.stackTraceLimit, 0);
           originalError.stackTraceLimit = limit;
-          const stackArray = error.stack?.split(`
-`);
-          error.stack = stackArray?.slice(0, limit + 1).join(`
-`);
+          const stackArray = error.stack?.split("\n");
+          error.stack = stackArray?.slice(0, limit + 1).join("\n");
           stack = stack.slice(0, limit);
           [error, stack] = stackFilterStorage.apply(error, stack);
           if (Error.prepareStackTrace) {

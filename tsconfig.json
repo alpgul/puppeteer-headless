@@ -17,6 +17,6 @@
     "noImplicitAny": false,
     "lib": ["esnext", "dom", "dom.iterable"]
   },
-  "include": ["**/*.ts", "prettier.config.mjs", "tests/browser.test.ts"],
+  "include": ["**/*.ts", "prettier.config.mjs", "tests/browser.test.ts", "esbuild.config.ts"],
   "exclude": ["node_modules", "dist", "build"]
 }

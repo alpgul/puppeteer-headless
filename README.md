@@ -52,6 +52,7 @@ A headless browser utility for Puppeteer with custom patches for Cloudflare and 
 ![Nopecha](out/Sannysoft.png)
 
 </details>
+
 ## Features
 
 - **Custom patches and filters for Cloudflare and Worker environments**
@@ -63,12 +64,6 @@ A headless browser utility for Puppeteer with custom patches for Cloudflare and 
 
 ```bash
 bun install
-```
-
-or
-
-```bash
-npm install
 ```
 
 ## Usage
@@ -86,24 +81,12 @@ Both files automatically apply the appropriate patches and filters for their res
 bun run build
 ```
 
-or
-
-```bash
-npm run build
-```
-
 ## Test
 
 Tests are written with `vitest`. To run the tests:
 
 ```bash
 bun run test
-```
-
-or
-
-```bash
-npm run test
 ```
 
 The tests automatically verify browser behavior and patch effects against various bot detection sites.
@@ -113,7 +96,7 @@ The tests automatically verify browser behavior and patch effects against variou
 - `puppeteer-core`
 - `@sparticuz/chromium-min`
 - `vitest` (for testing)
-- `bun` (optional, for fast development)
+- `bun`
 
 ## Contribution
 

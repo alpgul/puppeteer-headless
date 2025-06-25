@@ -1,6 +1,7 @@
 # dependencies (bun install)
 node_modules
-
+out/*
+!out/nopecha.png
 # output
 dist
 *.tgz

@@ -1,8 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
-
-import chromium from '@sparticuz/chromium-min';
-import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer-core';
+import { setTimeout } from 'node:timers/promises';
+import * as esbuild from 'esbuild';
+import config from '../esbuild.config.ts';
+import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 interface WebsiteTest {
   name: string;
@@ -38,6 +39,16 @@ const testWebsites: WebsiteTest[] = [
     url: 'https://abrahamjuliot.github.io/creepjs/',
   },
   {
+    name: 'CreepJS-Workers',
+    selector: 'body',
+    url: 'https://abrahamjuliot.github.io/creepjs/tests/workers.html',
+  },
+  {
+    name: 'CreepJS-Screen',
+    selector: 'body',
+    url: 'https://abrahamjuliot.github.io/creepjs/tests/screen.html',
+  },
+  {
     name: 'Sannysoft',
     selector: '#webgl-renderer.passed',
     url: 'https://bot.sannysoft.com/',
@@ -51,9 +62,9 @@ const testWebsites: WebsiteTest[] = [
     name: 'ReBrowser',
     selector: '#detections-table > tbody > tr:nth-child(10) > td:nth-child(1) > span',
     url: 'https://bot-detector.rebrowser.net/',
-  },
+  } /**/,
 ];
-const isDevelopment = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production';
 const gotoTimeout = 10_000;
 const selectorTimeout = 30_000;
 const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) => {
@@ -73,17 +84,18 @@ const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) =>
     });
     throw new Error('Selector not found');
   }
-  await Bun.sleep(100);
+  await setTimeout(300);
   const screenshotPromise = page.screenshot({
     path: `out/${site.name}.png`,
   });
 
   return await screenshotPromise;
 };
-const localExecutablePath = '/usr/bin/google-chrome-canary';
+const localExecutablePath = '/usr/bin/google-chrome-stable';
 const chromeVersion = '139.0.7252.0';
 const chromeVersionMajor = chromeVersion.split('.')[0];
 const userAgent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersionMajor}.0.0.0 Safari/537.36`;
+const screen = { width: 1920 / 1.25, height: 1080 / 1.25 };
 const metaData = {
   architecture: 'x86',
   bitness: '64',
@@ -154,77 +166,47 @@ describe.sequential('Browser Tests', () => {
   let websiteScreenshotTest;
 
   beforeAll(async () => {
+    const executablePath = isProduction ? undefined : localExecutablePath;
     browser = await puppeteer.launch({
       args: [
-        '--allow-pre-commit-input',
-        '--disable-background-networking',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-breakpad',
-        '--disable-client-side-phishing-detection',
-        '--disable-component-extensions-with-background-pages',
-        '--disable-component-update',
-        '--disable-default-apps',
-        '--disable-dev-shm-usage',
-        '--disable-extensions',
-        '--disable-hang-monitor',
-        '--disable-ipc-flooding-protection',
-        '--disable-prompt-on-repost',
-        '--disable-renderer-backgrounding',
-        '--disable-sync',
-        '--enable-blink-features=IdleDetection',
-        '--export-tagged-pdf',
-        '--force-color-profile=srgb',
-        '--metrics-recording-only',
-        '--no-first-run',
-        '--password-store=basic',
-        '--use-mock-keychain',
-        '--disable-domain-reliability',
-        '--disable-print-preview',
-        '--disable-speech-api',
-        '--disk-cache-size=33554432',
-        '--mute-audio',
-        '--no-default-browser-check',
-        '--no-pings',
-        '--font-render-hinting=none',
-        '--enable-features=NetworkServiceInProcess2,SharedArrayBuffer',
-        '--hide-scrollbars',
-        '--ignore-gpu-blocklist',
-        '--in-process-gpu',
-        '--use-gl=angle',
-        '--enable-unsafe-swiftshader',
-        '--allow-running-insecure-content',
+        '--disable-features=PdfOopif,PrivacySandboxSettings4,MediaRouter,OptimizationHints,Translate',
         '--disable-setuid-sandbox',
-        '--no-sandbox',
-        '--no-zygote',
+        '--force-fieldtrials',
+        '--no-default-browser-check',
+
+        '--use-gl=angle',
+
         '--disable-blink-features=AutomationControlled',
-        '--disable-features=PdfOopif',
-        `--screen-info={${1920 / 1.25}x${1080 / 1.25} }`, //workAreaLeft=0 workAreaRight=0 workAreaTop=0 workAreaBottom=32
+        `--screen-info={${screen.width}x${screen.height}}`,
         '--start-fullscreen',
         '--user-agent=' + userAgent,
       ],
-      debuggingPort: 9222,
-      defaultViewport: { deviceScaleFactor: 1.25, height: 1080 / 1.25, width: 1920 / 1.25 },
-      executablePath: isDevelopment
-        ? await chromium.executablePath(
-            'https://github.com/Sparticuz/chromium/releases/download/v137.0.1/chromium-v137.0.1-pack.x64.tar',
-          )
-        : localExecutablePath,
+      defaultViewport: { deviceScaleFactor: 1.25, height: screen.height, width: screen.width },
+      executablePath,
       headless: true,
       ignoreDefaultArgs: [
-        '--enable-automation',
+        '--enable-features=NetworkServiceInProcess2',
+        '--enable-blink-features=IdleDetection',
+        '--allow-pre-commit-input',
+        '--auto-open-devtools-for-tabs',
+        '--disable-breakpad',
+        '--disable-dev-shm-usage',
+        '--disable-hang-monitor',
         '--disable-popup-blocking',
-        '--disable-component-update',
-        '--disable-default-apps',
-        '--disable-extensions',
+        '--disable-prompt-on-repost',
+        '--enable-automation',
+        '--export-tagged-pdf',
+        '--force-color-profile',
+        '--hide-scrollbars',
+        '--remote-debugging-pipe',
       ],
     });
     page = await browser.newPage();
     websiteScreenshotTest = createWebsiteScreenshotTest(page);
-  });
+  }, selectorTimeout);
 
   afterAll(async () => {
-    await browser.close();
+    await browser?.close();
     expect(browser.connected).toBe(false);
   });
 
@@ -234,12 +216,8 @@ describe.sequential('Browser Tests', () => {
   });
 
   it('create workerPatch and cfPatch', async () => {
-    const build = await Bun.build({
-      entrypoints: ['./src/cfPatch.js', './src/workerPatch.js'],
-      format: 'iife',
-      outdir: './build',
-    });
-    expect(build.success).toBe(true);
+    const build = await esbuild.build(config);
+    expect(build).toBeDefined();
   });
 
   it('page and worker injection', async () => {

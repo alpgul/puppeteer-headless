@@ -4,7 +4,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     exclude: ['node_modules/', 'dist/', 'build/'],
-    globals: true,
     include: ['tests/**/*.test.ts'],
+  },
+  esbuild: {
+    target: 'esnext',
   },
 });

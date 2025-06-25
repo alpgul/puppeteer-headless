@@ -26,14 +26,13 @@
   "description": "A headless browser utility for Puppeteer with custom patches for Cloudflare and worker environments.",
   "type": "module",
   "scripts": {
-    "build": "bun build src/cfPatch.ts src/workerPatch.ts --target browser --format iife --outdir build",
-    "lint": "eslint",
-    "test": "vitest",
-    "test:production": "NODE_ENV=production vitest"
+    "build": "node esbuild.config.ts",
+    "lint": "tsc",
+    "test:production": "NODE_ENV=production vitest run",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@sparticuz/chromium-min": "^133.0.0",
-    "puppeteer-core": "^24.10.2"
+    "puppeteer": "^24.10.2"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
@@ -47,6 +46,7 @@
     "@types/web": "^0.0.235",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
+    "esbuild": "^0.25.5",
     "eslint": "^9.29.0",
     "eslint-config-love": "^120.0.0",
     "eslint-config-prettier": "^10.1.5",
