@@ -1,0 +1,42 @@
+import { stackFilterStorage } from '../../container/stackFilterStorage';
+import { consoleMethods } from '../../core/constant/global';
+import { consoleFilter } from '../../filters/consoleFilter';
+import { listenerFilter } from '../../filters/listenerFilter';
+import { mouseSimulationFilter } from '../../filters/mouseSimulationFilter';
+import { onMessageFilter } from '../../filters/onMessageFilter';
+import WindowHandler from '../../handlers/window';
+import FakeContext from '../../patches/console/context';
+import AddEventListener from '../../patches/eventTarget/addEventListener';
+import RemoveEventListener from '../../patches/eventTarget/removeEventListener';
+import FakeAttachShadow from '../../patches/HTMLElement/attachShadow';
+import FakeOnClickEL from '../../patches/HTMLElement/onClick';
+import FakeAvailHeight from '../../patches/screen/availHeight';
+import FakeType from '../../patches/screenOrientation/type';
+import FakeOnClick from '../../patches/window/onClick';
+import CommonPatch from '../patch/commonPatch';
+import ConsolePatch from '../patch/consolePatch';
+
+import { CommonBuild } from './commonBuild';
+
+/**
+ *
+ */
+export function cfBuild(): void {
+  CommonBuild();
+  WindowHandler.initOnMessageHandler();
+  stackFilterStorage.add(consoleFilter);
+  stackFilterStorage.add(listenerFilter);
+  stackFilterStorage.add(onMessageFilter);
+  stackFilterStorage.add(mouseSimulationFilter);
+  ConsolePatch.applyPatch(globalThis.console);
+  consoleMethods[consoleMethods.indexOf('dirxml')] = 'dirXml';
+  CommonPatch.applyPatch(FakeContext, globalThis.console, 'context');
+  CommonPatch.applyPatch(FakeAvailHeight, Screen.prototype, 'availHeight');
+  CommonPatch.applyPatch(FakeType, ScreenOrientation.prototype, 'type');
+  CommonPatch.applyPatch(FakeOnClickEL, HTMLElement.prototype, 'onclick');
+  CommonPatch.applyPatch(FakeOnClick, globalThis, 'onclick');
+  CommonPatch.applyPatch(AddEventListener, EventTarget.prototype, 'addEventListener');
+  CommonPatch.applyPatch(RemoveEventListener, EventTarget.prototype, 'removeEventListener');
+  CommonPatch.applyPatch(FakeAttachShadow, Element.prototype, 'attachShadow');
+  WindowHandler.initObserverNode();
+}

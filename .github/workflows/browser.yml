@@ -1,0 +1,56 @@
+name: Build and Deploy Changes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 */3 * *'
+
+jobs:
+  browser-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-modules-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-modules-${{ runner.os }}-
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+
+      - name: Install packages
+        run: bun install
+
+      - name: Test
+        run: bun run test:production
+
+      - name: Upload Browser Screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: out/
+
+      - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add -f out/
+          git commit -m "Update Screenshots: $(date +'%Y-%m-%d %H:%M:%S')" --no-verify
+          git push origin HEAD:master --no-verify
