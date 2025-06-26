@@ -4,6 +4,7 @@ import { consoleMethods } from '../../core/constant/global';
 import { consoleFilter } from '../../filters/consoleFilter';
 import FakeContext from '../../patches/console/context';
 import FakeMetaData from '../../patches/NavigatorUAData/getHighEntropyValues';
+import FakeGetParameter from '../../patches/WebGLRenderingContext/getParameter';
 import CommonPatch from '../patch/commonPatch';
 import ConsolePatch from '../patch/consolePatch';
 
@@ -20,5 +21,6 @@ export function WorkerBuild(metaData: Record<string, string>): void {
   ConsolePatch.applyPatch(globalThis.console);
   consoleMethods[consoleMethods.indexOf('dirxml')] = 'dirXml';
   CommonPatch.applyPatch(FakeContext, globalThis.console, 'context');
+  CommonPatch.applyPatch(FakeGetParameter, WebGLRenderingContext.prototype, 'getParameter');
   CommonPatch.applyPatch(FakeMetaData, globalThis.NavigatorUAData.prototype, 'getHighEntropyValues');
 }
