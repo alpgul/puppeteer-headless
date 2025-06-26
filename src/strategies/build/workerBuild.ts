@@ -22,5 +22,6 @@ export function WorkerBuild(metaData: Record<string, string>): void {
   consoleMethods[consoleMethods.indexOf('dirxml')] = 'dirXml';
   CommonPatch.applyPatch(FakeContext, globalThis.console, 'context');
   CommonPatch.applyPatch(FakeGetParameter, WebGLRenderingContext.prototype, 'getParameter');
+  CommonPatch.applyPatch(FakeGetParameter, WebGL2RenderingContext.prototype, 'getParameter');
   CommonPatch.applyPatch(FakeMetaData, globalThis.NavigatorUAData.prototype, 'getHighEntropyValues');
 }

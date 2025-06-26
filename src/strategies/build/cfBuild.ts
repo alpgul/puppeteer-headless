@@ -40,6 +40,7 @@ export function cfBuild(): void {
   CommonPatch.applyPatch(RemoveEventListener, EventTarget.prototype, 'removeEventListener');
   CommonPatch.applyPatch(FakeAttachShadow, Element.prototype, 'attachShadow');
   CommonPatch.applyPatch(FakeGetParameter, WebGLRenderingContext.prototype, 'getParameter');
+  CommonPatch.applyPatch(FakeGetParameter, WebGL2RenderingContext.prototype, 'getParameter');
 
   WindowHandler.initObserverNode();
 }

@@ -1000,10 +1000,7 @@ top: ${path.y}px;
           }
         }
         originalError.prepareStackTrace = function prepareStackTrace(error, stack) {
-          const wrappedPrototype = Error.prototype;
-          Object.defineProperty(Error, "prototype", {
-            value: originalError.prototype
-          });
+          const wrappedPrototype = Object.getPrototypeOf(error);
           Object.setPrototypeOf(error, originalError.prototype);
           if (Object.getPrototypeOf(Object.getPrototypeOf(error)) === originalError.prototype) {
             Object.setPrototypeOf(Object.getPrototypeOf(error), Error.prototype);
@@ -1017,9 +1014,6 @@ top: ${path.y}px;
           if (Error.prepareStackTrace) {
             error.stack = Error.prepareStackTrace(error, stack);
           }
-          Object.defineProperty(Error, "prototype", {
-            value: wrappedPrototype
-          });
           Object.setPrototypeOf(error, wrappedPrototype);
           return error.stack;
         };
@@ -1057,6 +1051,7 @@ top: ${path.y}px;
     commonPatch_default.applyPatch(removeEventListener_default, EventTarget.prototype, "removeEventListener");
     commonPatch_default.applyPatch(attachShadow_default, Element.prototype, "attachShadow");
     commonPatch_default.applyPatch(getParameter_default, WebGLRenderingContext.prototype, "getParameter");
+    commonPatch_default.applyPatch(getParameter_default, WebGL2RenderingContext.prototype, "getParameter");
     window_default.initObserverNode();
   }
 

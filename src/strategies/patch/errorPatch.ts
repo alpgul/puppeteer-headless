@@ -27,10 +27,8 @@ const ErrorPatch = {
         }
       }
       originalError.prepareStackTrace = function prepareStackTrace(error, stack) {
-        const wrappedPrototype = Error.prototype;
-        Object.defineProperty(Error, 'prototype', {
-          value: originalError.prototype,
-        });
+        const wrappedPrototype = Object.getPrototypeOf(error);
+
         Object.setPrototypeOf(error, originalError.prototype);
 
         if (Object.getPrototypeOf(Object.getPrototypeOf(error)) === originalError.prototype) {
@@ -45,9 +43,6 @@ const ErrorPatch = {
         if (Error.prepareStackTrace) {
           error.stack = Error.prepareStackTrace(error, stack);
         }
-        Object.defineProperty(Error, 'prototype', {
-          value: wrappedPrototype,
-        });
 
         Object.setPrototypeOf(error, wrappedPrototype);
         return error.stack;

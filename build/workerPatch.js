@@ -334,6 +334,22 @@
   };
   var getHighEntropyValues_default = FakeMetaData;
 
+  // src/patches/WebGLRenderingContext/getParameter.ts
+  var FakeGetParameter = class _FakeGetParameter {
+    static OriginalFunction;
+    static Type = 2 /* VALUE */;
+    static getParameter(pname) {
+      const returnValue = Reflect.apply(_FakeGetParameter.OriginalFunction, this, [pname]);
+      if (typeof returnValue === "string") {
+        if (returnValue === "Google Inc. (Google)") return "Google Inc. (NVIDIA Corporation)";
+        if (returnValue.includes("ANGLE") && returnValue.includes("SwiftShader"))
+          return "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060/PCIe/SSE2, OpenGL 4.6.0 NVIDIA 537.13)";
+      }
+      return returnValue;
+    }
+  };
+  var getParameter_default = FakeGetParameter;
+
   // src/strategies/patch/commonPatch.ts
   var CommonPatch = {
     applyPatch(classPatch, originalFunctionParent, property) {
@@ -765,10 +781,7 @@ top: ${path.y}px;
           }
         }
         originalError.prepareStackTrace = function prepareStackTrace(error, stack) {
-          const wrappedPrototype = Error.prototype;
-          Object.defineProperty(Error, "prototype", {
-            value: originalError.prototype
-          });
+          const wrappedPrototype = Object.getPrototypeOf(error);
           Object.setPrototypeOf(error, originalError.prototype);
           if (Object.getPrototypeOf(Object.getPrototypeOf(error)) === originalError.prototype) {
             Object.setPrototypeOf(Object.getPrototypeOf(error), Error.prototype);
@@ -782,9 +795,6 @@ top: ${path.y}px;
           if (Error.prepareStackTrace) {
             error.stack = Error.prepareStackTrace(error, stack);
           }
-          Object.defineProperty(Error, "prototype", {
-            value: wrappedPrototype
-          });
           Object.setPrototypeOf(error, wrappedPrototype);
           return error.stack;
         };
@@ -811,6 +821,8 @@ top: ${path.y}px;
     consolePatch_default.applyPatch(globalThis.console);
     consoleMethods[consoleMethods.indexOf("dirxml")] = "dirXml";
     commonPatch_default.applyPatch(context_default, globalThis.console, "context");
+    commonPatch_default.applyPatch(getParameter_default, WebGLRenderingContext.prototype, "getParameter");
+    commonPatch_default.applyPatch(getParameter_default, WebGL2RenderingContext.prototype, "getParameter");
     commonPatch_default.applyPatch(getHighEntropyValues_default, globalThis.NavigatorUAData.prototype, "getHighEntropyValues");
   }
 
