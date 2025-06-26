@@ -835,6 +835,22 @@ top: ${path.y}px;
   };
   var type_default = FakeType;
 
+  // src/patches/WebGL2RenderingContext/getParameter.ts
+  var Fake2GetParameter = class _Fake2GetParameter {
+    static OriginalFunction;
+    static Type = 2 /* VALUE */;
+    static getParameter(pname) {
+      const returnValue = Reflect.apply(_Fake2GetParameter.OriginalFunction, this, [pname]);
+      if (typeof returnValue === "string") {
+        if (returnValue === "Google Inc. (Google)") return "Google Inc. (NVIDIA Corporation)";
+        if (returnValue.includes("ANGLE") && returnValue.includes("SwiftShader"))
+          return "ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 3060/PCIe/SSE2, OpenGL 4.6.0 NVIDIA 537.13)";
+      }
+      return returnValue;
+    }
+  };
+  var getParameter_default = Fake2GetParameter;
+
   // src/patches/WebGLRenderingContext/getParameter.ts
   var FakeGetParameter = class _FakeGetParameter {
     static OriginalFunction;
@@ -849,7 +865,7 @@ top: ${path.y}px;
       return returnValue;
     }
   };
-  var getParameter_default = FakeGetParameter;
+  var getParameter_default2 = FakeGetParameter;
 
   // src/patches/window/onClick.ts
   var FakeOnClick = class _FakeOnClick {
@@ -1050,7 +1066,7 @@ top: ${path.y}px;
     commonPatch_default.applyPatch(addEventListener_default, EventTarget.prototype, "addEventListener");
     commonPatch_default.applyPatch(removeEventListener_default, EventTarget.prototype, "removeEventListener");
     commonPatch_default.applyPatch(attachShadow_default, Element.prototype, "attachShadow");
-    commonPatch_default.applyPatch(getParameter_default, WebGLRenderingContext.prototype, "getParameter");
+    commonPatch_default.applyPatch(getParameter_default2, WebGLRenderingContext.prototype, "getParameter");
     commonPatch_default.applyPatch(getParameter_default, WebGL2RenderingContext.prototype, "getParameter");
     window_default.initObserverNode();
   }
