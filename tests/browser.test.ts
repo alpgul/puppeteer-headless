@@ -62,7 +62,7 @@ const testWebsites: WebsiteTest[] = [
     name: 'ReBrowser',
     selector: '#detections-table > tbody > tr:nth-child(10) > td:nth-child(1) > span',
     url: 'https://bot-detector.rebrowser.net/',
-  } /**/,
+  },
 ];
 const isProduction = process.env.NODE_ENV === 'production';
 const gotoTimeout = 10_000;
@@ -70,7 +70,7 @@ const selectorTimeout = 30_000;
 const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) => {
   await page.goto(site.url, {
     timeout: gotoTimeout,
-    waitUntil: 'load',
+    waitUntil: 'networkidle2',
   });
 
   try {
@@ -174,7 +174,7 @@ describe.sequential('Browser Tests', () => {
         '--force-fieldtrials',
         '--no-default-browser-check',
 
-        '--use-gl=angle',
+        //'--use-gl=angle',
 
         '--disable-blink-features=AutomationControlled',
         `--screen-info={${screen.width}x${screen.height}}`,
