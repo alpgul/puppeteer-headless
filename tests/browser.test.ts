@@ -3,7 +3,8 @@ import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import * as esbuild from 'esbuild';
 import config from '../esbuild.config.ts';
-import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer';
+import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 interface WebsiteTest {
   name: string;
@@ -49,11 +50,6 @@ const testWebsites: WebsiteTest[] = [
     url: 'https://abrahamjuliot.github.io/creepjs/tests/screen.html',
   },
   {
-    name: 'Sannysoft',
-    selector: '#webgl-renderer.passed',
-    url: 'https://bot.sannysoft.com/',
-  },
-  {
     name: 'IPHey',
     selector: 'body > div.loader.hide',
     url: 'https://iphey.com/',
@@ -62,6 +58,11 @@ const testWebsites: WebsiteTest[] = [
     name: 'ReBrowser',
     selector: '#detections-table > tbody > tr:nth-child(10) > td:nth-child(1) > span',
     url: 'https://bot-detector.rebrowser.net/',
+  },
+  {
+    name: 'Sannysoft',
+    selector: '#webgl-renderer.passed',
+    url: 'https://bot.sannysoft.com/',
   } /**/,
 ];
 const isProduction = process.env.NODE_ENV === 'production';
@@ -166,7 +167,8 @@ describe.sequential('Browser Tests', () => {
   let websiteScreenshotTest;
 
   beforeAll(async () => {
-    const executablePath = isProduction ? undefined : localExecutablePath;
+    const executablePath = isProduction ? await chromium.executablePath() : localExecutablePath;
+    expect(executablePath).toBeDefined();
     browser = await puppeteer.launch({
       args: [
         '--disable-features=PdfOopif,PrivacySandboxSettings4,MediaRouter,OptimizationHints,Translate',
