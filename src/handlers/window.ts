@@ -27,8 +27,8 @@ function screenListener(event: MessageEvent<OnMessageEvent | undefined>): void {
 }
 const WindowHandler = {
   initObserverNode(): void {
-    document.addEventListener('DOMContentLoaded', function () {
-      observeNode(document.documentElement);
+    globalThis.document.addEventListener('DOMContentLoaded', function () {
+      observeNode(globalThis.document.documentElement);
     });
   },
   initOnMessageHandler(): void {

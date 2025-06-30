@@ -11,5 +11,5 @@ export function CommonBuild(): void {
   WindowHandler.initStorageHandler();
   stackFilterStorage.add(CommonFunctionFilter);
   ErrorPatch.applyPatch(globalThis.Error);
-  CommonPatch.applyPatch(FakeToString, Function.prototype, 'toString');
+  CommonPatch.applyPatch(FakeToString, globalThis.Function.prototype, 'toString');
 }

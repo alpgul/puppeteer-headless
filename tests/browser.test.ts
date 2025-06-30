@@ -5,66 +5,88 @@ import * as esbuild from 'esbuild';
 import config from '../esbuild.config.ts';
 import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+const customTest = 11;
 interface WebsiteTest {
   name: string;
   selector: string;
   url: string;
 }
 
-const testWebsites: WebsiteTest[] = [
+let testWebsites: WebsiteTest[] = [
   {
+    //1
     name: 'Nopecha',
     selector: 'body > div.main-wrapper > div > div:nth-child(3)[style="display: none;"]',
     url: 'https://nopecha.com/demo/cloudflare',
   },
   {
+    //2
     name: 'Pixelscan',
     selector: 'div.bg-consistentBg > img',
     url: 'https://pixelscan.net/fingerprint-check',
   },
   {
+    //3
     name: 'Browserscan',
     selector:
       '#browserscan > main > div > div > div.row.row-align-start.row-justify-start > div.col.col-xs-24.col-md-12 > div > div:nth-child(6) > div > div > div > span',
     url: 'https://www.browserscan.net/',
   },
   {
+    //4
     name: 'Brotector',
     selector: '#detections',
     url: 'https://kaliiiiiiiiii.github.io/brotector/',
   },
   {
+    //5
     name: 'CreepJS',
     selector: 'div.visitor-info div.col-six > div > span.unblurred',
     url: 'https://abrahamjuliot.github.io/creepjs/',
   },
   {
+    //6
     name: 'CreepJS-Workers',
     selector: 'body',
     url: 'https://abrahamjuliot.github.io/creepjs/tests/workers.html',
   },
   {
+    //7
     name: 'CreepJS-Screen',
     selector: 'body',
     url: 'https://abrahamjuliot.github.io/creepjs/tests/screen.html',
   },
   {
+    //8
     name: 'Sannysoft',
     selector: '#webgl-renderer.passed',
     url: 'https://bot.sannysoft.com/',
   },
   {
+    //9
     name: 'IPHey',
     selector: 'body > div.loader.hide',
     url: 'https://iphey.com/',
   },
   {
+    //10
     name: 'ReBrowser',
     selector: '#detections-table > tbody > tr:nth-child(10) > td:nth-child(1) > span',
     url: 'https://bot-detector.rebrowser.net/',
   },
+  {
+    //11
+    name: 'worker',
+    selector: 'body',
+    url: 'http://127.0.0.1:5500/tests/sharedWorker/index.html',
+  },
 ];
+if (customTest > 0) {
+  testWebsites = [testWebsites[customTest - 1]];
+}
 const isProduction = process.env.NODE_ENV === 'production';
+
 const gotoTimeout = 10_000;
 const selectorTimeout = 30_000;
 const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) => {
@@ -83,6 +105,9 @@ const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) =>
       path: `out/${site.name}.png`,
     });
     throw new Error('Selector not found');
+  }
+  if (customTest > 0) {
+    await setTimeout(3000000);
   }
   await setTimeout(300);
   const screenshotPromise = page.screenshot({
@@ -137,27 +162,29 @@ const metaData = {
 };
 async function createWorkerHandleInjection(
   cdp: CDPSession,
-  filter: Array<{ type: string }>,
+  filter: Array<{ type: string; exclude?: boolean }>,
   workerFile: string,
 ): Promise<void> {
-  await cdp.send('Target.setAutoAttach', {
-    autoAttach: true,
-    filter,
-    flatten: true,
-    waitForDebuggerOnStart: true,
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- Event handler needs to be async to run worker code
+  cdp.on('Target.attachedToTarget', async ({ sessionId }) => {
+    const connection = cdp.connection();
+    const sessionCDP = connection?.session(sessionId);
+    if (sessionCDP) {
+      await sessionCDP.send('Runtime.evaluate', {
+        expression: workerFile,
+      });
+      await sessionCDP.send('Runtime.runIfWaitingForDebugger');
+    }
   });
   await cdp.send('Target.setDiscoverTargets', {
     discover: true,
     filter,
   });
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- Event handler needs to be async to run worker code
-  cdp.on('Target.attachedToTarget', async ({ sessionId }) => {
-    const connection = cdp.connection();
-    const sessionCDP = connection?.session(sessionId);
-    await sessionCDP?.send('Runtime.evaluate', {
-      expression: workerFile,
-    });
-    await sessionCDP?.send('Runtime.runIfWaitingForDebugger');
+  await cdp.send('Target.setAutoAttach', {
+    autoAttach: true,
+    filter,
+    flatten: true,
+    waitForDebuggerOnStart: true,
   });
 }
 describe.sequential('Browser Tests', () => {
@@ -174,7 +201,7 @@ describe.sequential('Browser Tests', () => {
         '--force-fieldtrials',
         '--no-default-browser-check',
 
-        //'--use-gl=angle',
+        '--use-gl=angle',
 
         '--disable-blink-features=AutomationControlled',
         `--screen-info={${screen.width}x${screen.height}}`,
@@ -183,7 +210,7 @@ describe.sequential('Browser Tests', () => {
       ],
       defaultViewport: { deviceScaleFactor: 1.25, height: screen.height, width: screen.width },
       executablePath,
-      headless: true,
+      headless: false,
       ignoreDefaultArgs: [
         '--enable-features=NetworkServiceInProcess2',
         '--enable-blink-features=IdleDetection',
@@ -201,8 +228,6 @@ describe.sequential('Browser Tests', () => {
         '--remote-debugging-pipe',
       ],
     });
-    page = await browser.newPage();
-    websiteScreenshotTest = createWebsiteScreenshotTest(page);
   }, selectorTimeout);
 
   afterAll(async () => {
@@ -212,7 +237,6 @@ describe.sequential('Browser Tests', () => {
 
   it('should initialize the browser and the page', () => {
     expect(browser).toBeDefined();
-    expect(page).toBeDefined();
   });
 
   it('create workerPatch and cfPatch', async () => {
@@ -221,13 +245,21 @@ describe.sequential('Browser Tests', () => {
   });
 
   it('page and worker injection', async () => {
-    const browserCDP = await browser.target().createCDPSession();
     let workerFile = fs.readFileSync(path.join(process.cwd(), '/build/workerPatch.js'), 'utf8');
     workerFile = workerFile.replace('globalThis.metaData', JSON.stringify(metaData));
-    await createWorkerHandleInjection(browserCDP, [{ type: 'service_worker' }, { type: 'shared_worker' }], workerFile);
-    await page.setUserAgent(userAgent, metaData);
+
+    const browserCDP = await browser.target().createCDPSession();
+    await sharedWorkerInjection(browserCDP, workerFile);
+    await createWorkerHandleInjection(browserCDP, [{ type: 'shared_worker' }, { type: 'service_worker' }], workerFile);
+
+
+    page = await browser.newPage();
+    expect(page).toBeDefined();
+    websiteScreenshotTest = createWebsiteScreenshotTest(page);
     const pageCDP = await page.createCDPSession();
     await createWorkerHandleInjection(pageCDP, [{ type: 'worker' }], workerFile);
+
+    await page.setUserAgent(userAgent, metaData);
     const preloadFile = fs.readFileSync(path.join(process.cwd(), '/build/cfPatch.js'), 'utf8');
     const evaluationPromise = page.evaluateOnNewDocument(preloadFile);
     await expect(evaluationPromise).resolves.not.toThrow();
@@ -245,8 +277,48 @@ describe.sequential('Browser Tests', () => {
           const screenshot = await websiteScreenshotTest(site);
           expect(screenshot).toBeDefined();
         },
-        selectorTimeout + gotoTimeout,
+        selectorTimeout + gotoTimeout + 1000000,
       );
     }
   });
 });
+async function sharedWorkerInjection(pageCDP: CDPSession, workerFile: string) {
+  await pageCDP.send('Fetch.enable', {
+    patterns: [
+      {
+        requestStage: 'Response',
+        resourceType: 'Other',
+      },
+    ],
+  });
+
+  pageCDP.on('Fetch.requestPaused', async (event) => {
+    try {
+
+
+    const targets = await pageCDP.send('Target.getTargets');
+    const target = targets.targetInfos.find(target => target.url === event.request.url)
+    if(target?.type === 'shared_worker') {
+      const response = await pageCDP.send('Fetch.getResponseBody', {requestId: event.requestId});
+      if(response.base64Encoded){
+        response.body = Buffer.from(response.body, 'base64').toString('utf-8');
+      }
+      await pageCDP.send('Fetch.fulfillRequest', {
+        requestId: event.requestId,
+        responseCode: 200,
+        responseHeaders: [
+          { name: 'Content-Type', value: 'text/javascript' },
+        ],
+        body: Buffer.from(workerFile + '\n' + response.body).toString('base64'),
+      });
+
+    }else{
+      await pageCDP.send('Fetch.continueRequest', {requestId: event.requestId});
+    }
+  } catch (error) {
+      await pageCDP.send('Fetch.continueRequest', {requestId: event.requestId});
+  }
+  });
+}
+
+

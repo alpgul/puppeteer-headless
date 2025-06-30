@@ -31,7 +31,7 @@ const createPointerEvent = (
     pointerType: 'mouse',
     screenX: path.x + globallyStorage.getScreenRect().x,
     screenY: path.y + globallyStorage.getScreenRect().y,
-    view: globalThis.self,
+    view: globalThis as unknown as Window,
   });
 
   Object.defineProperty(event, '_isTrusted', {
@@ -57,7 +57,7 @@ const createMouseEvent = (path: { x: number; y: number }, movementX: number, mov
     movementY,
     screenX: path.x + globallyStorage.getScreenRect().x,
     screenY: path.y + globallyStorage.getScreenRect().y,
-    view: globalThis.self,
+    view: globalThis as unknown as Window,
     which: BUTTON_STATE_NONE,
   });
 

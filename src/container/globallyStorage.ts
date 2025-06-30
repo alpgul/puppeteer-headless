@@ -5,7 +5,7 @@ class GloballyStorage {
   private metaData: Record<string, string> | undefined;
   private screenRect: DOMRect | undefined;
   private readonly shadowRootSet: Set<ShadowRoot>;
-  private topWindow: (Window & { Function: FunctionConstructor }) | undefined;
+  private topWindow: Window | undefined;
   private topWindowToString: (() => string) | undefined;
 
   private constructor() {
@@ -34,7 +34,7 @@ class GloballyStorage {
   }
   public getTopWindow(): Window & { Function: FunctionConstructor } {
     this.topWindow ??= Browser.findTopAccessibleWindow();
-    return this.topWindow;
+    return this.topWindow as Window & { Function: FunctionConstructor };
   }
   public getToWindowToString(): (...arguments_: unknown[]) => string {
     this.topWindowToString ??= this.getTopWindow().Function.prototype.toString;

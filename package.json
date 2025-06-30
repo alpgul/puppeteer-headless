@@ -29,7 +29,7 @@
     "build": "node esbuild.config.ts",
     "lint": "tsc",
     "test:production": "NODE_ENV=production vitest run",
-    "test": "vitest run"
+    "test": "vitest "
   },
   "dependencies": {
     "puppeteer": "^24.10.2"

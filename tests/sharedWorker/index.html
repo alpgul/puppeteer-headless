@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <script>
+        const blob = new Blob([`console.log("Shared OriginalWorker",Date.now());`], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+
+        const worker = new SharedWorker("sharedworker.js");
+        worker.port.start();
+    </script>
+</body>
+</html>
