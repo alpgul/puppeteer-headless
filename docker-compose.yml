@@ -13,5 +13,3 @@ services:
       - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
     volumes:
       - ./:/pptrheadless
-    ports:
-      - '1080:1080'
