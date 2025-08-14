@@ -11,7 +11,6 @@ services:
     environment:
       - ADGUARD_USERNAME=${ADGUARD_USERNAME}
       - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
-    restart: unless-stopped
     volumes:
       - ./:/pptrheadless
     ports:
