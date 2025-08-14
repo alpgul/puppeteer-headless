@@ -17,4 +17,3 @@ services:
       - ./:/pptrheadless
     ports:
       - '1080:1080'
-    network_mode: 'host'
