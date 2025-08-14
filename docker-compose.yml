@@ -6,8 +6,7 @@ services:
       context: .
       args:
         - ADGUARD_USERNAME=${ADGUARD_USERNAME}
-        - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
-    command: /bin/sh -c "/pptrheadless/init.sh && sleep infinity"
+        - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}    
     container_name: pptrheadless
     environment:
       - ADGUARD_USERNAME=${ADGUARD_USERNAME}
