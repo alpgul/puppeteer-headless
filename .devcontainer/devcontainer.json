@@ -1,5 +1,15 @@
 {
-  "remoteEnv": {
-    "TZ": "Europe/Amsterdam"
+  "name": "pptrheadless DevContainer",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "pptrheadless-service",
+  "workspaceFolder": "/pptrheadless",
+  "remoteUser": "pptrheadless",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "streetsidesoftware.code-spell-checker"]
+    }
   }
 }

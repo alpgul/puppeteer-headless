@@ -15,7 +15,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['**/*.d.ts', '**/package-lock.json', '**/build/*', '**/dist/*']),
+  globalIgnores(['**/*.d.ts', '**/package-lock.json', '**/build/*', '**/dist/*', '**/esbuild.config.ts']),
 
   {
     linterOptions: {

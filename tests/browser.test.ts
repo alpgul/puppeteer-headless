@@ -1,18 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
+
 import * as esbuild from 'esbuild';
-import config from '../esbuild.config.ts';
 import puppeteer, { type Browser, type CDPSession, type Page } from 'puppeteer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const customTest = 11;
+import config from '../esbuild.config.ts';
+import { exposeMouseSim } from '../src/puppeteer/simulation/initMouseSimulation.ts';
+
+const customTest = 1;
 interface WebsiteTest {
   name: string;
   selector: string;
   url: string;
 }
-
 let testWebsites: WebsiteTest[] = [
   {
     //1
@@ -77,17 +79,15 @@ let testWebsites: WebsiteTest[] = [
   },
   {
     //11
-    name: 'worker',
+    name: 'DeviceInfo',
     selector: 'body',
-    url: 'http://127.0.0.1:5500/tests/sharedWorker/index.html',
+    url: 'https://nopecha.com/demo/cloudflare',
   },
 ];
 if (customTest > 0) {
   testWebsites = [testWebsites[customTest - 1]];
 }
-const isProduction = process.env.NODE_ENV === 'production';
-
-const gotoTimeout = 10_000;
+const gotoTimeout = 30_000;
 const selectorTimeout = 30_000;
 const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) => {
   await page.goto(site.url, {
@@ -106,9 +106,7 @@ const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) =>
     });
     throw new Error('Selector not found');
   }
-  if (customTest > 0) {
-    await setTimeout(3000000);
-  }
+
   await setTimeout(300);
   const screenshotPromise = page.screenshot({
     path: `out/${site.name}.png`,
@@ -117,10 +115,10 @@ const createWebsiteScreenshotTest = (page: Page) => async (site: WebsiteTest) =>
   return await screenshotPromise;
 };
 const localExecutablePath = '/usr/bin/google-chrome-stable';
-const chromeVersion = '139.0.7252.0';
+const chromeVersion = '139.0.7258.127';
 const chromeVersionMajor = chromeVersion.split('.')[0];
 const userAgent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersionMajor}.0.0.0 Safari/537.36`;
-const screen = { width: 1920 / 1.25, height: 1080 / 1.25 };
+const screen = { height: 1080 / 1.25, width: 1920 / 1.25 };
 const metaData = {
   architecture: 'x86',
   bitness: '64',
@@ -157,12 +155,12 @@ const metaData = {
   mobile: false,
   model: '',
   platform: 'Linux',
-  platformVersion: '6.11.0',
+  platformVersion: '6.14.0',
   wow64: false,
 };
 async function createWorkerHandleInjection(
   cdp: CDPSession,
-  filter: Array<{ type: string; exclude?: boolean }>,
+  filter: Array<{ exclude?: boolean; type: string }>,
   workerFile: string,
 ): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises -- Event handler needs to be async to run worker code
@@ -193,24 +191,29 @@ describe.sequential('Browser Tests', () => {
   let websiteScreenshotTest;
 
   beforeAll(async () => {
-    const executablePath = isProduction ? undefined : localExecutablePath;
     browser = await puppeteer.launch({
       args: [
+        '--proxy-server=socks5://127.0.0.1:1080',
         '--disable-features=PdfOopif,PrivacySandboxSettings4,MediaRouter,OptimizationHints,Translate',
-        '--disable-setuid-sandbox',
+        //'--disable-setuid-sandbox',
         '--force-fieldtrials',
         '--no-default-browser-check',
+        '--no-sandbox',
 
+        //'--enable-gpu',
         '--use-gl=angle',
+        '--use-angle=gl-egl', //'--use-angle=shaderswift',
+        '--ignore-gpu-blocklist',
 
         '--disable-blink-features=AutomationControlled',
         `--screen-info={${screen.width}x${screen.height}}`,
         '--start-fullscreen',
         '--user-agent=' + userAgent,
       ],
+      debuggingPort: 9222,
       defaultViewport: { deviceScaleFactor: 1.25, height: screen.height, width: screen.width },
-      executablePath,
-      headless: false,
+      executablePath: localExecutablePath,
+      headless: true,
       ignoreDefaultArgs: [
         '--enable-features=NetworkServiceInProcess2',
         '--enable-blink-features=IdleDetection',
@@ -252,8 +255,8 @@ describe.sequential('Browser Tests', () => {
     await sharedWorkerInjection(browserCDP, workerFile);
     await createWorkerHandleInjection(browserCDP, [{ type: 'shared_worker' }, { type: 'service_worker' }], workerFile);
 
-
     page = await browser.newPage();
+    page.exposeFunction('mouseSim', exposeMouseSim.bind(page));
     expect(page).toBeDefined();
     websiteScreenshotTest = createWebsiteScreenshotTest(page);
     const pageCDP = await page.createCDPSession();
@@ -277,7 +280,7 @@ describe.sequential('Browser Tests', () => {
           const screenshot = await websiteScreenshotTest(site);
           expect(screenshot).toBeDefined();
         },
-        selectorTimeout + gotoTimeout + 1000000,
+        selectorTimeout + gotoTimeout + 1_000_000,
       );
     }
   });
@@ -294,31 +297,24 @@ async function sharedWorkerInjection(pageCDP: CDPSession, workerFile: string) {
 
   pageCDP.on('Fetch.requestPaused', async (event) => {
     try {
-
-
-    const targets = await pageCDP.send('Target.getTargets');
-    const target = targets.targetInfos.find(target => target.url === event.request.url)
-    if(target?.type === 'shared_worker') {
-      const response = await pageCDP.send('Fetch.getResponseBody', {requestId: event.requestId});
-      if(response.base64Encoded){
-        response.body = Buffer.from(response.body, 'base64').toString('utf-8');
+      const targets = await pageCDP.send('Target.getTargets');
+      const target = targets.targetInfos.find((target) => target.url === event.request.url);
+      if (target?.type === 'shared_worker') {
+        const response = await pageCDP.send('Fetch.getResponseBody', { requestId: event.requestId });
+        if (response.base64Encoded) {
+          response.body = Buffer.from(response.body, 'base64').toString('utf-8');
+        }
+        await pageCDP.send('Fetch.fulfillRequest', {
+          body: Buffer.from(workerFile + '\n' + response.body).toString('base64'),
+          requestId: event.requestId,
+          responseCode: 200,
+          responseHeaders: [{ name: 'Content-Type', value: 'text/javascript' }],
+        });
+      } else {
+        await pageCDP.send('Fetch.continueRequest', { requestId: event.requestId });
       }
-      await pageCDP.send('Fetch.fulfillRequest', {
-        requestId: event.requestId,
-        responseCode: 200,
-        responseHeaders: [
-          { name: 'Content-Type', value: 'text/javascript' },
-        ],
-        body: Buffer.from(workerFile + '\n' + response.body).toString('base64'),
-      });
-
-    }else{
-      await pageCDP.send('Fetch.continueRequest', {requestId: event.requestId});
+    } catch {
+      await pageCDP.send('Fetch.continueRequest', { requestId: event.requestId });
     }
-  } catch (error) {
-      await pageCDP.send('Fetch.continueRequest', {requestId: event.requestId});
-  }
   });
 }
-
-

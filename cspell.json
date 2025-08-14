@@ -1,27 +1,8 @@
 {
-    "version": "0.2",
-    "language": "en",
-    "words": [
-        "bitness",
-        "Fitts",
-        "KHTML",
-        "sonarjs",
-        "sparticuz"
-    ],
-    "dictionaries": [
-        "en_US",
-        "softwareTerms",
-        "typescript",
-        "node"
-    ],
-    "ignorePaths": [
-        "node_modules/**",
-        "dist/**",
-        "build/**"
-    ],
-    "files": [
-        "**/*.ts",
-        "**/*.js",
-        "**/*.json"
-    ]
+  "version": "0.2",
+  "language": "en",
+  "words": ["bitness", "Fitts", "KHTML", "sonarjs", "sparticuz"],
+  "dictionaries": ["en_US", "softwareTerms", "typescript", "node"],
+  "ignorePaths": ["node_modules/**", "dist/**", "build/**"],
+  "files": ["**/*.ts", "**/*.js", "**/*.json"]
 }

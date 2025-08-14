@@ -13,8 +13,8 @@ function globalOnMessageListener(that_: Window, event: MessageEvent<OnMessageEve
   }
 }
 function screenListener(event: MessageEvent<OnMessageEvent | undefined>): void {
-  if (event.data?.command === 'getScreen' && event.source instanceof Window) {
-    const targetIframe = Browser.findIframeByWindow(event.source);
+  if (event.data?.command === 'getScreen' && event.source) {
+    const targetIframe = Browser.findIframeByWindow(event.source as Window);
     if (targetIframe) {
       event.source.postMessage(
         { command: 'receiveScreen', rect: targetIframe.getBoundingClientRect(), type: 'screen' },
@@ -32,11 +32,6 @@ const WindowHandler = {
     });
   },
   initOnMessageHandler(): void {
-    if (globalThis.top && globalThis.self !== globalThis.top) {
-      // eslint-disable-next-line sonarjs/post-message --  This is intentional for patching postMessage
-      globalThis.top.postMessage({ command: 'getScreen', type: 'screen' }, '*');
-    }
-
     // eslint-disable-next-line sonarjs/post-message -- This is intentional for patching postMessage
     globalThis.addEventListener('message', function (this: Window, event: MessageEvent<OnMessageEvent>) {
       globalOnMessageListener(this, event);

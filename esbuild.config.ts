@@ -24,21 +24,26 @@ const config: esbuild.BuildOptions = {
               const fileName = file?.path?.split('/').pop()?.split('.')[0];
               if (fileName) {
                 const content = new TextDecoder().decode(file.contents);
-                if (fileName==='workerPatch') {
-                  workerPatch=banner(fileName) + content + footer();
-                 }
+                if (fileName === 'workerPatch') {
+                  workerPatch = banner(fileName) + content + footer();
+                }
                 file.contents = new TextEncoder().encode(banner(fileName) + content + footer());
-
+              }
             }
-          }});
+          });
           result.outputFiles?.forEach((file) => {
             const fileName = file?.path?.split('/').pop()?.split('.')[0];
-            if(typeof fileName ==='string'){
-              if (fileName==='cfPatch' && workerPatch) {
-                const cfPatch= 'const fullPatch=(win)=>{\nconst globalThis = win ?? window;\n' + workerPatch +"\n"+ new TextDecoder().decode(file.contents) +`\n${fileName}();\n};`;
-                fs.writeFileSync(file.path, iife(cfPatch,'fullPatch'));
-              }else{
-                fs.writeFileSync(file.path, iife(new TextDecoder().decode(file.contents),fileName));
+            if (typeof fileName === 'string') {
+              if (fileName === 'cfPatch' && workerPatch) {
+                const cfPatch =
+                  'const fullPatch=(win)=>{\nconst globalThis = win ?? window;\n' +
+                  workerPatch +
+                  '\n' +
+                  new TextDecoder().decode(file.contents) +
+                  `\n${fileName}();\n};`;
+                fs.writeFileSync(file.path, iife(cfPatch, 'fullPatch'));
+              } else {
+                fs.writeFileSync(file.path, iife(new TextDecoder().decode(file.contents), fileName));
               }
               console.log(`✅ Created ${file.path}`);
             }
@@ -65,7 +70,6 @@ async function build() {
 build();
 
 export default config;
-function iife(cfPatch: string,fileName: string ): string | NodeJS.ArrayBufferView<ArrayBufferLike> {
-return `(()=>{\n${cfPatch}\n${fileName}();\n})();\n`;
+function iife(cfPatch: string, fileName: string): string | NodeJS.ArrayBufferView<ArrayBufferLike> {
+  return `(()=>{\n${cfPatch}\n${fileName}();\n})();\n`;
 }
-

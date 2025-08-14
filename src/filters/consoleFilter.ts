@@ -22,10 +22,6 @@ export function consoleFilter(error: Error, stackObject: NodeJS.CallSite[]): [Er
         }
       }
       stackObject.splice(stackIndex - 1, Removal.SINGLE_ITEM_REMOVAL);
-      /*
-       * stackObj[stackIndex-1] bu CallSite objesi orjinal console log,error,info vs ile değiştirilecek
-       *
-       */
       error.stack = arrayStack.join('\n');
     }
   }

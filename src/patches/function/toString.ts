@@ -12,7 +12,7 @@ class FakeToString {
   public static toString(this: wrappedFunction<[...unknown[]], unknown, string>, ...arguments_: unknown[]): string {
     const patch = {
       [FILTER_PATCH_NAME]: (): string => {
-        if (globallyStorage.getTopWindow() === globalThis as unknown as Window) {
+        if (globallyStorage.getTopWindow() === (globalThis as unknown as Window)) {
           if (originalFunctionStorage.has(this)) {
             return Reflect.apply(FakeToString.OriginalFunction, originalFunctionStorage.get(this), arguments_);
           }

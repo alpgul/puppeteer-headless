@@ -23,7 +23,7 @@ class RegisterService {
     wrappedFunction: wrappedFunction;
   }): void {
     const topWindow = globallyStorage.getTopWindow();
-    if (topWindow === globalThis as unknown as Window) {
+    if (topWindow === (globalThis as unknown as Window)) {
       originalFunctionStorage.store(wrappedFunction, originalFunction);
     } else {
       Reflect.apply(this.originalDispatch, topWindow, [

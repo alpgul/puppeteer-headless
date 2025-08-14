@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  pptrheadless-service:
+    build:
+      context: .
+      args:
+        - ADGUARD_USERNAME=${ADGUARD_USERNAME}
+        - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
+    command: /bin/sh -c "/pptrheadless/init.sh && sleep infinity"
+    container_name: pptrheadless
+    environment:
+      - ADGUARD_USERNAME=${ADGUARD_USERNAME}
+      - ADGUARD_PASSWORD=${ADGUARD_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - ./:/pptrheadless
+    ports:
+      - '1080:1080'
+    network_mode: 'host'
